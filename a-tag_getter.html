@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<title>Let's get ANCHOR from URL | powered by yo41sawada</title>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/a-tag_getter.css" rel="stylesheet">
+	<script src="js/jquery-1.9.0.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.socialbutton-1.9.0.min.js"></script>
+	
+	<link rel="canonical" href="http://www.yo41sawada.jp/a-tag_getter/a-tag_getter.html" />
+	<meta name="keywords" content="url,anchor,アンカー,tag,タグ,title,タイトル,HTMLAnchorElement,自動取得" />
+	<meta name="description" content="指定したURLからタイトルを自動取得し、HTMLアンカー（aタグ）を生成することができるWEBサービスです。" />
+	<meta property="og:title" content="Let's get ANCHOR from URL | powered by yo41sawada" />
+	<meta property="og:site_name" content="a-tag getter" />
+	<meta property="og:image" content="http://www.yo41sawada.jp/a-tag_getter/img/link.png"/>
+	<meta property="og:description" content="指定したURLからタイトルを自動取得し、HTMLアンカー（aタグ）を生成することができるWEBサービスです。" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="http://www.yo41sawada.jp/a-tag_getter/a-tag_getter.html" />
+</head>
+<body>	
+	<div class="hero-unit">
+	    <h1>GET HTML ANCHOR <small>for all bloggers</small></h1>
+	    <p>
+	    you can easily get and customize HTML Anchor Element with TITLE from URL</br>
+		指定したURLからタイトルを自動取得し、HTMLアンカー（aタグ）を生成することができるWEBサービスです。
+	    </p>
+	    <form class="form-search">
+			<input type="text" name="url_text" class="input-xxlarge search-query" placeholder="URLを入力してください。">
+			<input class="btn" type="submit" value="submit">	
+		</form>	
+		<div class="social">
+			<span id="twitter"></span>
+			<span id="facebook_like"></span>
+			<span id="hatena"></span>
+			<span id="evernote"></span>
+		</div>
+    </div>
+	
+	<div id="loading"><img src="img/loading.gif" /></div>
+	<div class="row">
+		<div class="span7">
+			<form class="form-horizontal">
+				<fieldset>
+					<div class="control-group">
+						<label class="control-label" for="input00">shown_text</label>
+						<div class="controls">
+							<input type="text" name="anchor_text" class="input-xlarge" id="input00"  placeholder="リンク表示用のため必須です。">
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="input01">title</label>
+						<div class="controls">
+							<input type="text" class="input-xlarge" id="input01">
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="input02">id</label>
+						<div class="controls">
+							<input type="text" class="input-xlarge" id="input02">
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label">target</label>
+						<div class="controls">
+							<label class="radio">
+								<input type="radio" name="optionsRadios"  id="optionsRadios1" value="none" checked>
+								設定しない（N/A）
+							</label>
+							<label class="radio">
+								<input type="radio" name="optionsRadios"  id="optionsRadios2" value="current">
+								現在のウィンドウでリンク先を開く（current）
+							</label>
+							<label class="radio">
+								<input type="radio" name="optionsRadios"  id="optionsRadios3" value="new">
+								新しいタブやウィンドウでリンク先を開く（new）
+							</label>
+						</div>
+					</div>
+				</fieldset>
+			</form>	
+		</div>
+		<div class="span5">
+			<div class="control-group">
+				<div class="controls">
+					<input name="get_anchor" class="btn btn-primary" type="submit" value="get a tag">
+				</div>
+			</div>
+			<div class="control-group">
+				<div class="controls">
+					<textarea name="anchor_result" class="input-xlarge" id="textarea" rows="3"></textarea>
+				</div>
+			</div>
+		</div>
+	</div>
+		
+	<script>
+		//TODO:script切り出し
+		//初回表示制御
+		$(function(){
+			$('.row').hide();
+			$("#loading").hide();
+		});
+				
+		//hero-unitを押下した場合は再表示
+		$('.hero-unit h1').click(function(){
+			window.location = location.href;
+		});
+			
+		//URL送信
+		var href = "";
+		$('.form-search').submit(function(){
+			$('.row').hide();
+
+			var target_url = $('.form-search [name=url_text]').val();
+			console.log("url_text:"+ target_url);
+
+			//バリデーション、サニタイズ
+			//TODO:リファクタリング
+			if(target_url==""){
+				alert("please fill URL.");	
+				return;
+			}
+			href = encodeURI(target_url);
+			href = href.replace(/~ m|[^;/?:@&=+\$,A-Za-z0-9\-_.!~*'()%]|/g,"");
+			console.log("href:"+ href);
+			
+			//YQL
+			var yql_url = "http://query.yahooapis.com/v1/public/yql?";
+			yql_url += "q=select%20head.title%20from%20html%20";
+			yql_url +=  "where%20url=%22"+href+"%22%20and%20xpath=%22*%22&format=json";
+			console.log("YQL:"+ yql_url);
+			
+			//タイトル取得
+			$(function() {
+				$("#loading").show();
+			});
+			$.ajax({
+				url : yql_url,
+				dataType : "jsonp",
+				timeout : 7000,
+				success  : function(json){
+					var results = json.query.results;
+					if(results==null){
+						alert("sorry, you can not get title from this URL.");
+						return;
+					}
+										
+					//FIXME:タイトルを取得できないサイトがある模様
+					var count = json.query.count;
+					var title = json.query.results.html.head.title;
+					if(count=="0" || title==""){
+						alert("sorry, you can not get title from this URL.");
+						return;
+					}
+				
+					console.log("title:"+title);
+					$('#input00').val(title).focus();
+					$('#input01').val("");
+					$('#input02').val("");
+					$('.row').fadeIn();
+				},
+				error  : function(XMLHttpRequest, textStatus, errorThrown){
+					alert("error has occured.");
+					$('.form-search [name=url_text]').focus();
+				},
+				complete  : function(XMLHttpRequest, textStatus){
+					$('.controls [name=anchor_result]').val("");
+					$('#loading').fadeOut();
+				}
+			});
+			
+			return false;	//反映はフォームに残す
+		});
+
+		//anchor取得
+		$('.controls [name=get_anchor]').click(function(){
+			var shown_text = $('#input00').val();
+			var title = $('#input01').val();
+			var id = $('#input02').val();
+			var target = $('.controls input:radio:checked').val();
+			
+			//バリデーション、サニタイズ
+			//TODO:リファクタリング
+			if(shown_text==""){
+				alert("please fill shown_text.");
+				return;
+			}
+			shown_text = shown_text.replace(/[&"<>]/g,function(c) {
+														return {
+															"&": "&amp;",
+															'"': "&quot;",
+															"<": "&lt;",
+															">": "&gt;"
+														}[c];
+													  });
+			title = title.replace(/[&"<>]/g,function(c) {
+												return {
+													"&": "&amp;",
+													'"': "&quot;",
+													"<": "&lt;",
+													">": "&gt;"
+												}[c];
+											});
+			id = id.replace(/[&"<>]/g,function(c) {
+											return {
+												"&": "&amp;",
+												'"': "&quot;",
+												"<": "&lt;",
+												">": "&gt;"
+											}[c];
+										  });
+			
+			switch (target){
+			  case "none":
+				target = "";
+				break;
+			  case "current":
+				target = " target=\"_self\"";
+				break;
+			  case "new":
+				target = " target=\"_blank\"";
+				break;
+			}
+			
+			var anchor_html = "";
+			anchor_html += "<a ";
+			anchor_html += "href=\""+ href + "\" "; 
+			anchor_html += "title=\"" + title +"\" "; 
+			anchor_html += "id=\"" + id +"\""; 
+			anchor_html += target;
+			anchor_html += ">"; 
+			anchor_html += shown_text; 
+			anchor_html += "</a>"; 
+			console.log(anchor_html);
+			
+			//生成したanchorの反映
+			$('.controls [name=anchor_result]').val(anchor_html).select();
+		});
+		
+		//ソーシャルボタン読み込み
+		//後回しで実施
+		$(window).load(function(){
+			var info = "a-tag getter ～URLからタイトルを取得しaタグを生成するサービス～";
+			$('#twitter').socialbutton('twitter',{
+				button: 'horizontal',
+				url: location.href,
+				text: info
+			});
+			$('#facebook_like').socialbutton('facebook_like', {
+				button: 'button_count',
+				url: 'http://www.yo41sawada.jp/services/a-tag_getter/a-tag_getter.html'
+			}); 
+			$('#hatena').socialbutton('hatena', {
+			    button: 'standard',
+				url: location.href,
+				title: info
+			});
+			$('#evernote').socialbutton('evernote',{
+				button: 'article-clipper-jp',
+				styling: 'full'
+			});
+		});	
+</script>
+</body>
+</html>

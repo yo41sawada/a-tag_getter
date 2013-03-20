@@ -1,0 +1,11 @@
+.social img, 
+.social iframe, 
+.social a, 
+.social div {
+    vertical-align: top !important;
+}
+
+#loading {
+	width: 80%;
+	margin: 0 auto;
+}
