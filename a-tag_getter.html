@@ -212,8 +212,8 @@
 												">": "&gt;"
 											}[c];
 										  });
-			
-			switch (target){
+						
+			/*switch (target){
 			  case "none":
 				target = "";
 				break;
@@ -223,17 +223,23 @@
 			  case "new":
 				target = " target=\"_blank\"";
 				break;
-			}
+			}*/
 			
-			var anchor_html = "";
-			anchor_html += "<a ";
+			var anchor_html = $('<a />',{	title:	title,
+											target:	target,
+											id:		id,
+											href:	href,
+											text:	shown_text}).get(0)
+																.outerHTML;
+			
+			/*anchor_html += "<a ";
 			anchor_html += "href=\""+ href + "\" "; 
 			anchor_html += "title=\"" + title +"\" "; 
 			anchor_html += "id=\"" + id +"\""; 
 			anchor_html += target;
 			anchor_html += ">"; 
 			anchor_html += shown_text; 
-			anchor_html += "</a>"; 
+			anchor_html += "</a>";*/
 			console.log(anchor_html);
 			
 			//生成したanchorの反映
