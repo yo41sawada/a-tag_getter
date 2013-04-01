@@ -220,6 +220,8 @@
 											text:	shown_text}).get(0)
 																.outerHTML;
 			
+			console.log(anchor_html);
+			
 			//生成したanchorの反映
 			$('.controls [name=anchor_result]').val(anchor_html).select();
 		});
